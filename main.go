@@ -19,7 +19,6 @@ import (
 
 	"github.com/minio/minio-go"
 	"github.com/minio/minio-go/pkg/credentials"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -836,12 +835,8 @@ func downloadFromS3WithPrefix(client *minio.Client, prefix, bucket string) (stri
 	doneCh := make(chan struct{})
 	defer close(doneCh)
 	objectCh := client.ListObjectsV2(bucket, prefix, false, doneCh)
-	// if len(objectCh) == 0 {
-	// 	return "", fmt.Errorf("failed to download s3 backup: no backups found")
-	// }
-	logrus.Infof("melsayed ---------------------len--- %v", len(objectCh))
+
 	for object := range objectCh {
-		log.Infof("melsayed----------------------------- %v", object.Key)
 		if object.Err != nil {
 			log.Error("failed to list objects in backup buckets [%s]:", bucket, object.Err)
 			return "", object.Err
@@ -850,6 +845,9 @@ func downloadFromS3WithPrefix(client *minio.Client, prefix, bucket string) (stri
 			filename = object.Key
 			break
 		}
+	}
+	if len(filename) == 0 {
+		return "", fmt.Errorf("failed to download s3 backup: no backups found")
 	}
 	// if folder is included, strip it so it doesnt end up in a folder on the host itself
 	targetFilename := path.Base(filename)
