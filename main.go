@@ -637,7 +637,7 @@ func DownloadS3Backup(c *cli.Context) error {
 	if len(folder) != 0 {
 		prefix = fmt.Sprintf("%s/%s", folder, prefix)
 	}
-
+	log.Infof("melsayed------------------------ %v", prefix)
 	// we need download with prefix because we don't know if the file is ziped or not
 	filename, err := downloadFromS3WithPrefix(client, prefix, bc.BucketName)
 	if err != nil {
@@ -834,17 +834,19 @@ func downloadFromS3WithPrefix(client *minio.Client, prefix, bucket string) (stri
 	var filename string
 	doneCh := make(chan struct{})
 	defer close(doneCh)
+	log.Infof("melsayed-------------------------dfsfsd---- %v", bucket, prefix)
+
 	objectCh := client.ListObjectsV2(bucket, prefix, false, doneCh)
-	if len(objectCh) == 0 {
-		return "", fmt.Errorf("failed to download s3 backup: no backups found")
-	}
+	// if len(objectCh) == 0 {
+	// 	return "", fmt.Errorf("failed to download s3 backup: no backups found")
+	// }
 
 	for object := range objectCh {
+		log.Infof("melsayed----------------------------- %v", object.Key)
 		if object.Err != nil {
 			log.Error("failed to list objects in backup buckets [%s]:", bucket, object.Err)
 			return "", object.Err
 		}
-		log.Infof("melsayed----------------------------- %v", object.Key)
 		if prefix == decompressedName(object.Key) {
 			filename = object.Key
 			break
